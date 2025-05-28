@@ -7,30 +7,32 @@ const App = () => {
   const pageSize = 10;
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch(
+          'https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json'
+        );
+        if (!res.ok) throw new Error('API error');
+        const json = await res.json();
+        setData(json);
+      } catch (error) {
+        alert('Failed to fetch data');
+      }
+    };
+
     fetchData();
   }, []);
-
-  const fetchData = async () => {
-    try {
-      const res = await fetch('https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json');
-      if (!res.ok) throw new Error('API error');
-      const json = await res.json();
-      setData(json);
-    } catch (error) {
-      alert('failed to fetch data');
-    }
-  };
 
   const totalPages = Math.ceil(data.length / pageSize);
   const startIndex = (page - 1) * pageSize;
   const paginatedData = data.slice(startIndex, startIndex + pageSize);
 
   const handlePrevious = () => {
-    if (page > 1) setPage(page - 1);
+    setPage((prevPage) => (prevPage > 1 ? prevPage - 1 : prevPage));
   };
 
   const handleNext = () => {
-    if (page < totalPages) setPage(page + 1);
+    setPage((prevPage) => (prevPage < totalPages ? prevPage + 1 : prevPage));
   };
 
   return (
@@ -43,21 +45,31 @@ const App = () => {
           </tr>
         </thead>
         <tbody>
-          {paginatedData.map((emp) => (
-            <tr key={emp.id}>
-              <td>{emp.id}</td>
-              <td>{emp.name}</td>
-              <td>{emp.email}</td>
-              <td>{emp.role}</td>
+          {paginatedData.length > 0 ? (
+            paginatedData.map((emp) => (
+              <tr key={emp.id}>
+                <td>{emp.id}</td>
+                <td>{emp.name}</td>
+                <td>{emp.email}</td>
+                <td>{emp.role}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="4">Loading...</td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
 
-      <div style={{ marginTop: '20px' }}>
-        <button onClick={handlePrevious} disabled={page === 1}>Previous</button>
-        <span style={{ margin: '0 10px' }}>Page {page}</span>
-        <button onClick={handleNext} disabled={page === totalPages}>Next</button>
+      <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center' }}>
+        <button onClick={handlePrevious} disabled={page <= 1}>
+          Previous
+        </button>
+        <span style={{ margin: '0 10px' }}>Page {page} of {totalPages}</span>
+        <button onClick={handleNext} disabled={page >= totalPages}>
+          Next
+        </button>
       </div>
     </div>
   );
